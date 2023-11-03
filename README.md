@@ -1,2 +1,2 @@
 # ChatApp
-Kommunikationsapplikation für Prog2
+Kommunikationssystem für Prog2
