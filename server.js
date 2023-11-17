@@ -7,10 +7,12 @@ const cors = require('cors');
 const server = http.createServer(app);
 const io = socketIo(server);
 
+app.use(express.json());
+
 const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',
-  password: '153624',
+  password: 'passwort',
   database: 'chat_app_db',
 });
 
@@ -24,10 +26,9 @@ db.connect((err) => {
 
 db.query(
   `CREATE TABLE IF NOT EXISTS messages (
-    id INT AUTO_INCREMENT,
-    user VARCHAR(255),
-    message VARCHAR(255),
-    PRIMARY KEY(id)
+    id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
+    user VARCHAR(255) NOT NULL,
+    message VARCHAR(255) NOT NULL
   )`,
   (err, results) => {
     if (err) {
@@ -58,16 +59,21 @@ app.get('/messages', (req, res) => {
 });
 
 app.post('/send-message', (req, res) => {
-  console.log(req.body);
+  console.log('Request body:', req.body);
   const { user, message } = req.body;
+
+  if (!user || !message) {
+    console.error('User or message not provided in request body');
+    return res.status(400).send('User or message not provided');
+  }
+
   db.query(
     'INSERT INTO messages (user, message) VALUES (?, ?)',
     [user, message],
     (err, results) => {
       if (err) {
-        console.error('Failed to insert message: ' + err.stack);
-        res.sendStatus(500);
-        return;
+        console.error('Failed to insert message:', err.stack);
+        return res.sendStatus(500);
       }
       res.sendStatus(200);
     }
@@ -81,7 +87,7 @@ io.on('connection', (socket) => {
   });
 });
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
 server.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
