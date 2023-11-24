@@ -25,6 +25,21 @@ const db = mysql.createConnection({
 db.connect((err) => {
   if (err) throw err;
   console.log('Connected to the database!');
+
+  const createMessagesTable = `
+    CREATE TABLE IF NOT EXISTS messages (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      room VARCHAR(255) NOT NULL,
+      user VARCHAR(255) NOT NULL,
+      message TEXT NOT NULL,
+      time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+
+  db.query(createMessagesTable, (err, results) => {
+    if (err) throw err;
+    console.log('Messages table created or already exists');
+  });
 });
 
 io.on("connection", (socket) => {
