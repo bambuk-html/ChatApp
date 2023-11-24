@@ -1,35 +1,60 @@
-import React, {useEffect, useState} from "react";
 import "./App.css";
 import io from "socket.io-client";
+import { useState, useEffect } from "react";
+import Chat from "./Chat";
 
-let socket
-const CONNECTION_PORT = 'localhost:3000/';
+const socket = io.connect("http://localhost:3001");
 
 function App() {
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [room, setRoom] = useState('');
-  const [userName, setUserName] = useState('');
-  useEffect(() => {
-    socket = io(CONNECTION_PORT);
-  }, [CONNECTION_PORT]);
+  const [username, setUsername] = useState("");
+  const [room, setRoom] = useState("");
+  const [showChat, setShowChat] = useState(false);
+  const [messages, setMessages] = useState([]);
 
-  const connectToRoom = () => {
-    socket.emit('join_room', room)
-  }
+  const joinRoom = () => {
+    if (username !== "" && room !== "") {
+      socket.emit("join_room", room);
+      setShowChat(true);
+    }
+  };
+
+  useEffect(() => {
+    socket.on('previous_messages', (previousMessages) => {
+      setMessages(previousMessages);
+    });
+  
+    socket.on('receive_message', (newMessage) => {
+      setMessages((messages) => [...messages, newMessage]);
+    });
+  }, []);
+
   return (
     <div className="App">
-      {!loggedIn ? (
-        <div className="logIn">
-          <h1>Log In</h1>
-          <input type="text" placeholder="Username" onChange=((e) => {setUserName(e.target.value)}) />
-          <input type="text" placeholder="Room" onChange=((e) => {setRoom(e.target.value)}) />
-          <button onClick={connectToRoom}>Log In</button>
+      {!showChat ? (
+        <div className="joinChatContainer">
+          <h3>Join A Chat</h3>
+          <input
+            type="text"
+            placeholder="John..."
+            onChange={(event) => {
+              setUsername(event.target.value);
+            }}
+          />
+          <input
+            type="text"
+            placeholder="Room ID..."
+            onChange={(event) => {
+              setRoom(event.target.value);
+            }}
+          />
+          <button onClick={joinRoom}>Join A Room</button>
         </div>
-      ): (
-        <h1>You are Logged In</h1>
+        
+      ) : (
+        <Chat socket={socket} username={username} room={room} messages={messages} />
       )}
     </div>
-  )
-};
+  );
+}
 
 export default App;

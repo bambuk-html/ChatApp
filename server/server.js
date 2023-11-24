@@ -1,97 +1,59 @@
-const express = require('express');
+const express = require("express");
 const app = express();
-const http = require('http');
-const socketIo = require('socket.io');
-const mysql = require('mysql2');
-const cors = require('cors');
-const server = http.createServer(app);
-const io = socketIo(server);
-
+const http = require("http");
+const cors = require("cors");
+const { Server } = require("socket.io");
+const mysql = require("mysql");
 app.use(cors());
-app.use(express.json());
+
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST"],
+  },
+});
 
 const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',
   password: 'passwort',
-  database: 'chat_app_db',
+  database: 'chat_db'
 });
 
 db.connect((err) => {
-  if (err) {
-    console.error('Database connection failed: ' + err.stack);
-    return;
-  }
-  console.log('Connected to the database');
+  if (err) throw err;
+  console.log('Connected to the database!');
 });
 
-db.query(
-  `CREATE TABLE IF NOT EXISTS messages (
-    id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
-    user VARCHAR(255) NOT NULL,
-    message VARCHAR(255) NOT NULL
-  )`,
-  (err, results) => {
-    if (err) {
-      console.error('Failed to create table: ' + err.stack);
-      return;
-    }
-    console.log('Table created successfully');
-  }
-);
+io.on("connection", (socket) => {
+  console.log(`User Connected: ${socket.id}`);
 
-const messages = [];
-
-app.get('/messages', (req, res) => {
-  db.query(
-    'SELECT * FROM messages',
-    (err, results) => {
-      if (err) {
-        console.error('Failed to fetch messages: ' + err.stack);
-        res.sendStatus(500);
-        return;
-      }
-      res.json(results);
-    }
-  );
-});
-
-app.post('/send-message', (req, res) => {
-  console.log('Request body:', req.body);
-  const { user, message } = req.body;
-
-  if (!user || !message) {
-    console.error('User or message not provided in request body');
-    return res.status(400).send('User or message not provided');
-  }
-
-  db.query(
-    'INSERT INTO messages (user, message) VALUES (?, ?)',
-    [user, message],
-    (err, results) => {
-      if (err) {
-        console.error('Failed to insert message:', err.stack);
-        return res.sendStatus(500);
-      }
-      res.sendStatus(200);
-    }
-  );
-});
-
-io.on('connection', (socket) => {
-  console.log('A user connected');
-
-    soocket.on('join_room', (data) => {
-      socket.join(data);
-      console.log('User joined room:', data);
+  socket.on('join_room', (room) => {
+    socket.join(room);
+    console.log(`User with ID: ${socket.id} joined room: ${room}`);
+  
+    db.query('SELECT * FROM messages WHERE room = ?', [room], (err, results) => {
+      if (err) throw err;
+      console.log('Fetched messages:', results);  // Log the fetched messages
+      socket.emit('previous_messages', results);
     });
+  });
 
-  socket.on('disconnect', () => {
-    console.log('A user disconnected');
+  socket.on('send_message', (data) => {
+    socket.to(data.room).emit('receive_message', data);
+      data.time = new Date().toISOString().slice(0, 19).replace('T', ' ');
+      db.query('INSERT INTO messages SET ?', data, (err) => {
+      if (err) throw err;
+    });
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User Disconnected", socket.id);
   });
 });
 
-const port = process.env.PORT || 3001;
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+server.listen(3001, () => {
+  console.log("SERVER RUNNING");
 });
