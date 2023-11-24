@@ -1,6 +1,6 @@
 .App {
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   background: #fff;
   color: #212121;
   font-family: "Open Sans", sans-serif;
@@ -27,7 +27,7 @@ body {
   width: 210px;
   height: 40px;
   margin: 7px;
-  border: 2px solid #43a047;
+  border: 2px solid indigo;
   border-radius: 5px;
   padding: 5px;
   font-size: 16px;
@@ -41,18 +41,35 @@ body {
   border-radius: 5px;
   padding: 5px;
   font-size: 16px;
-  background: #43a047;
+  background: indigo;
   color: #fff;
   cursor: pointer;
 }
 
 .joinChatContainer button:hover {
-  background: #2e7d32;
+  background: rgb(121, 0, 208);
 }
 
 .chat-window {
   width: 100%;
   height: 100%;
+}
+
+.chat-window {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 100vh;
+}
+
+.chat-body {
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+.chat-footer {
+  position: sticky;
+  bottom: 0;
 }
 
 .chat-window p {
@@ -101,7 +118,7 @@ body {
   height: auto;
   min-height: 40px;
   max-width: 120px;
-  background-color: #43a047;
+  background-color: deepskyblue;
   border-radius: 5px;
   color: white;
   display: flex;
@@ -133,7 +150,7 @@ body {
 
 #other .message-content {
   justify-content: flex-end;
-  background-color: cornflowerblue;
+  background-color: deeppink;
 }
 
 #other .message-meta {
@@ -153,7 +170,7 @@ body {
 
 .chat-window .chat-footer {
   height: 40px;
-  border: 1px solid #263238;
+  border: 1px solid #322638;
   border-top: none;
   display: flex;
 }
@@ -180,11 +197,11 @@ body {
   background: transparent;
   outline: none;
   font-size: 25px;
-  color: lightgray;
+  color: black;
 }
 
 .chat-window .chat-footer button:hover {
-  color: #43a047;
+  color: blueviolet;
 }
 .hide {
   opacity: 0 !important;
